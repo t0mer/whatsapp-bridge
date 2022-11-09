@@ -1,0 +1,12 @@
+version: "3.6"
+services:
+  whatsapp-bridge:
+    image: techblog/whatsapp-bridge
+    container_name: whatsapp-bridge
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./wa-bridge:/app/config
