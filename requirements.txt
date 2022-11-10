@@ -2,4 +2,6 @@ loguru
 configparser
 heyoo
 fastapi-mqtt
-requests_toolbelt
+python-dotenv==0.20.0
+requests==2.28.1
+requests-toolbelt==0.9.1
