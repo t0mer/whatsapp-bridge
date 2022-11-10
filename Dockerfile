@@ -22,4 +22,4 @@ COPY app /app
 
 WORKDIR /app
 
-ENTRYPOINT ["/usr/local/bin/uvicorn", "app:app", "--port 8081", "--host 0.0.0.0", "--log-level error"]
+ENTRYPOINT ["/usr/local/bin/uvicorn", "app:app", "--port","8081","--host", "0.0.0.0", "--log-level", "error"]
