@@ -2,7 +2,6 @@ import io
 import os
 import sys
 import json
-import requests
 from loguru import logger
 from heyoo import WhatsApp
 from fastapi import FastAPI, Request
@@ -46,7 +45,10 @@ def connect(client, flags, rc, properties):
 async def message_to_topic(client, topic, payload, qos, properties):
     try:
         payload = json.loads(payload.decode())
-        send_message(payload["message"],payload["recipient"])
+        if "template" in payload and "language" in payload:
+            send_message(payload["message"],payload["recipient"],payload["template"],payload["language"])
+        else:
+            send_message(payload["message"],payload["recipient"],"","")
     except Exception as e:
         logger.error("oh snap something went wrong. "+ e)
 
@@ -95,9 +97,9 @@ async def webhook(request: Request):
 def send_message(message,recipient,template,language):
     try:
         logger.debug("Sending message to: {}".format(recipient))
-        if not template:
+        if not template or template == "":
             template=config.get("Whatsapp","api.template_name")
-        if not language:
+        if not language or language== "":
             language=config.get("Whatsapp","api.template_language") 
 
         if template:
