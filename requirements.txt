@@ -2,3 +2,4 @@ loguru
 configparser
 heyoo
 fastapi-mqtt
+requests_toolbelt
