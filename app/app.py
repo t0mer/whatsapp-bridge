@@ -3,7 +3,8 @@ import os
 import sys
 import json
 from loguru import logger
-from heyoo import WhatsApp
+from manish import MaNish
+from manish.template import *
 from fastapi import FastAPI, Request
 from confighandler import ConfigHandler
 from gmqtt.mqtt.constants import MQTTv311
@@ -34,7 +35,7 @@ fast_mqtt = FastMQTT(config=mqtt_config)
 fast_mqtt.init_app(app)
 templates = Jinja2Templates(directory="templates/")
 webhook_base_url=config.get("Whatsapp","webhook.base_url")
-messenger = WhatsApp(config.get("Whatsapp","api.token"),  phone_number_id=str(config.get("Whatsapp","api.phone_id")))
+manish = MaNish(config.get("Whatsapp","api.token"),  phone_number_id=str(config.get("Whatsapp","api.phone_id")))
 
 @fast_mqtt.on_connect()
 def connect(client, flags, rc, properties):
@@ -45,10 +46,7 @@ def connect(client, flags, rc, properties):
 async def message_to_topic(client, topic, payload, qos, properties):
     try:
         payload = json.loads(payload.decode())
-        if "template" in payload and "language" in payload:
-            send_message(payload["message"],payload["recipient"],payload["template"],payload["language"])
-        else:
-            send_message(payload["message"],payload["recipient"],"","")
+        send_message(payload["message"],payload["phone"],"","")
     except Exception as e:
         logger.error("oh snap something went wrong. "+ e)
 
@@ -70,31 +68,31 @@ async def verify(request: Request):
 def home(request: Request):
     return templates.TemplateResponse('disclaimer.html', context={'request': request})
 
-@app.get("/message/{recipient}/{message}/{token}")
-def send(recipient: str, message: str, token: str,template :str = "",language :str = ""):
-    if token == config.get("Whatsapp","webhook.token"):
-        return send_message(message,recipient,template,language)
+@app.get("/send")
+def send(phone: str= "", message: str = "",template:str = "", language: str = ""):
+    return send_message(message,phone,template,language)
+
 @app.post(webhook_base_url, include_in_schema=False)
 async def webhook(request: Request):
     data = await request.json()
-    changed_field = messenger.changed_field(data)
+    changed_field = manish.changed_field(data)
     if changed_field == "messages":
-        new_message = messenger.get_mobile(data)
+        new_message = manish.get_mobile(data)
         if new_message:
-            mobile = messenger.get_mobile(data)
-            name = messenger.get_name(data)
-            message_type = messenger.get_message_type(data)
+            mobile = manish.get_mobile(data)
+            name = manish.get_name(data)
+            message_type = manish.get_message_type(data)
             if message_type == "text":
-                message = messenger.get_message(data)
+                message = manish.get_message(data)
                 fast_mqtt.publish("whatsapp/received",'{"sender":"' + mobile + '","message":"' + message + '"}')
         else:
-            delivery = messenger.get_delivery(data)
+            delivery = manish.get_delivery(data)
             if delivery:
                 print(f"Message : {delivery}")
     return "ok"
 
 
-def send_message(message,recipient,template,language):
+def send_message(message,recipient,template:str = "",language:str ="" ):
     try:
         logger.debug("Sending message to: {}".format(recipient))
         if not template or template == "":
@@ -103,12 +101,12 @@ def send_message(message,recipient,template,language):
             language=config.get("Whatsapp","api.template_language") 
 
         if template:
-            msg_body_params = [{"type": "text","text": message}]
-            messenger.send_templatev2(template=template,lang=language,recipient_id=recipient,components=[
-                    {'type': 'body','parameters': msg_body_params}])
+            parameter = Parameter(type="text",text = message)
+            body = Component(type="body",parameters=[parameter])
+            manish.send_template(components=TemplateEncoder().encode([body]),recipient_id=recipient,template=template,lang=language)
             logger.debug("Message sent using template")
         else:
-            messenger.send_message(message=message,recipient_id=recipient)
+            manish.send_message(message=message,recipient_id=recipient)
             logger.debug("Message sent using text message")
         return "ok"
     except Exception as e:
