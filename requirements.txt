@@ -1,6 +1,6 @@
 loguru
 configparser
-heyoo
+ma-nish
 fastapi-mqtt
 python-dotenv==0.20.0
 requests==2.28.1
