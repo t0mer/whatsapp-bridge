@@ -3,5 +3,11 @@ configparser
 ma-nish
 fastapi-mqtt
 python-dotenv==0.20.0
-requests==2.28.1
+requests==2.32.2
 requests-toolbelt==0.9.1
+anyio>=4.4.0 # not directly required, pinned by Snyk to avoid a vulnerability
+fastapi>=0.109.1 # not directly required, pinned by Snyk to avoid a vulnerability
+pillow>=10.3.0 # not directly required, pinned by Snyk to avoid a vulnerability
+starlette>=0.40.0 # not directly required, pinned by Snyk to avoid a vulnerability
+validators>=0.21.0 # not directly required, pinned by Snyk to avoid a vulnerability
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
